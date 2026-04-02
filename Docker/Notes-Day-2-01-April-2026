@@ -1,0 +1,127 @@
+IMAGES in DOCKER
+PULL a Base IMAGE
+
+
+# docker pull ubuntu 
+
+# docker pull ubuntu:22.04 
+
+# docker images
+
+# docker rmi ubuntu 
+
+# docker rmi ubuntu:22.04
+
+Docker Containers - Runtime Options
+
+Container should be created from an image  -> container should be running
+
+We can use Modes with docker run command 
+
+1. Foreground mode (-it)
+
+-i = interative 
+-t = terminal
+
+  --> Container will created, container will running
+  --> root user will be attached to the terminal of the container
+
+# docker run -it ubuntu
+
+# docker ps -a
+
+Come out of the container: 
+keep the container running: press CTRL pq
+
+Go inside the container -> attach to the terminal of the container 
+# docker attach <containerid>
+
+Come out of the container: 
+Stop the container: exit 
+
+
+2. Detached mode (-d):
+
+--> Container will created, container will running
+--> root user will NOT be attached to the container
+
+
+# docker run -d nginx
+
+
+
+# docker ps -a
+
+# docker info
+
+
+3.Execute a command on the container from the host server
+
+# docker exec -it <container id> bash 
+
+
+4. Delete all containers
+
+# docker rm -f $(docker ps -aq)
+
+5. Clean up the docker host (Delete stopped containers, delete all images)
+
+# docker system prune --all
+
+Give y 
+
+It will delete all stopped containers and delete all images
+6. Port Mapping or Port Forwarding
+
+By default an application on a docker container is available on its exposed port.
+
+It is the users internet that cannot reach the container port
+
+For this we have do port forwarding or mapping in docker
+
+i.e. we have to map a VM free system port with container port
+
+example = 8989:80
+
+systemport:containerport
+
+> If a container is already created, we cannot do port forwarding for the container
+
+> port forwarding will be applied at the docker run command itself
+
+> flag for port forwarding (-p) and -P
+
+# docker run --name web1 -d -p 8989:80 nginx
+
+> if you want docker to do port mapping then use flag -P
+
+# docker run --name web2 -d -P httpd
+
+7. Docker Volumes
+
+BIND MOUNT VOLUME
+
+In this type of volume, any directory on the VM can be taken and mounted on the container during runtime.
+
+We have a repository where developers are maintaining the application code.
+
+https://github.com/Sonal0409/ecomm.git
+
+
+We want to deploy this application on a httpd container. Get the above code on the docker host machine. We also want to access the ecomm application from the browser 
+
+
+# git clone https://github.com/Sonal0409/ecomm.git
+
+#  docker run --name myweb -d -P  -v /root/ecomm:/usr/local/apache2/htdocs/    httpd
+
+# docker ps -a
+
+Any change the developer makes on the code, we have to fetch the latest code and the container should have the new changes. 
+
+# docker pull origin master 
+
+Changes will reflect on container,
+
+
+
