@@ -1,0 +1,362 @@
+Main Topic: Docker Compose
+Introduction & Purpose:
+Docker Compose is a tool for automating multi-container deployments using declarative YAML files
+Eliminates the need to repeatedly run manual docker run commands with multiple options
+Files can be version-controlled and shared with team members for consistent environment setup
+Docker Compose File Structure (docker-compose.yml):
+Networks Section:
+Creates custom bridge networks automatically
+Containers in the same network can communicate via container names (not IP addresses)
+Syntax: networks: followed by network name
+Volumes Section:
+Creates named volumes for data persistence
+Syntax: volumes: followed by volume name
+Volumes are stored in /var/lib/docker/volumes
+Services Section:
+Defines containers/microservices to deploy
+Each service includes:
+image: - Docker image name
+container_name: - Name for the container
+ports: - Port mapping (host:container)
+networks: - Network attachment
+volumes: - Volume mapping
+environment: - Environment variables
+depends_on: - Service dependencies
+restart: - Restart policy (always/never/on-failure)
+build: - Build image from Dockerfile
+Key Commands:
+docker compose up -d - Create and start containers in detached mode
+docker compose up --build - Build images and start containers
+docker compose down - Stop and remove containers/networks
+docker compose down -v - Also remove volumes
+docker compose ps - List running containers
+Environment Variables:
+Can be hardcoded in YAML (not recommended for passwords)
+Use .env file for sensitive data (not shared in version control)
+Pass variables at runtime: VAR=value docker compose up -d
+Reference in YAML using ${VARIABLE_NAME}
+Practical Examples Demonstrated:
+WordPress + MySQL deployment with networking and volumes
+Node.js application with Dockerfile build integration
+Upcoming Topics:
+Docker Swarm for container orchestration
+Docker Stack (Swarm + Compose)
+Kubernetes for production deployments
+
+
+WORDPRESS_MYSQL DEMO
+
+# vim docker-compose.yml
+
+# create a custom bridge network with name mynet1
+networks:
+  mynet1:
+# create a named volume to preserve data
+volumes:
+  myvol:
+# Deploy microservices
+# docker run --name=db -e MYSQL_ROOT_PASSWORD=password --network=mynet1 -v=myvol:/var/lib/mysql mysql
+services:
+  db:
+   image: mysql
+   networks:
+     - mynet1
+   environment:
+     MYSQL_ROOT_PASSWORD: password
+     MYSQL_DATABASE: wordpress
+     MYSQL_USER: wordpress
+     MYSQL_PASSWORD: wordpress
+   volumes:
+     - myvol:/var/lib/mysql
+   restart: always
+# docker run --name=myweb -p 8282:80 --network=mynet1 -e WORDPRESS_DB_NAME=wordpress  wordpress
+  myweb:
+    depends_on:
+      - db
+    image: wordpress
+    networks:
+      - mynet1
+    ports:
+      - 8282:80
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+
+
+Save the file
+
+
+
+Save the file 
+# docker compose up -d
+
+
+
+
+Build and run services:
+
+# git clone https://github.com/Sonal0409/nodejsappDockerfile.git
+
+# cd nodejsappDockerfile
+
+# vim docker-compose.yml
+
+volumes:
+  myvol:
+services:
+  mynodeapp:
+    build: .
+    image: mynodeimage
+    ports:
+      - 8989:80
+    volumes:
+      - myvol:/tmp
+
+
+
+
+# docker compose up --build -d
+
+========================================
+
+Custom Images
+
+
+Commit a container in to Image
+
+
+When ever we have to create our custom image using dockerfile, docker will always create a temporary container -> execute the argument of dockerfile → commit container into an image -> thereby getting a custom image layer → we can run this custom image → we get another container → in this again the next step of dockerfile is executed→ this container is again committed into an Image -> thereby getting next custom image layer-> the process continues until all the steps of dockerfile are executed.
+These temporary containers are deleted 
+The Final Image is collection of all the image layers
+
+Do not do this demo- it is just for understanding the build process of docker.
+
+
+
+# docker run -it --name=cont1 ubuntu
+
+
+We will  be on the container 
+
+Customize the container by installing some packages 
+
+# apt-get update && apt-get install git -y
+
+# apt-get install curl -y
+
+
+Come out of the container - press CTRL pq 
+
+Commit the container into an Image 
+
+# docker commit cont1 myubuntu
+
+# docker images 
+
+
+Now delete the container and we create a new container using Custom image 
+
+
+# docker rm -f $(docker ps -aq)
+
+# docker run -it --name=mycont myubuntu
+
+On the containers run the command to validate 
+
+# curl --version
+# git --version
+
+Come out of container -> exit
+
+Pushing image to dockerhub, so others can access your image
+
+# docker login -u <docker-hub-username>
+
+Give password when asked 
+
+Login will be successful
+
+Change the image name, so as to include you account library 
+
+# docker tag myubuntu  sonal04/myubuntu
+Push the image to your dockerhub account
+
+# docker push sonal04/myubuntu 
+
+
+You can go to dockerhub → your hub → see the custom image is present
+
+
+
+Dockerfile
+==============================
+
+A dockerfile is a simple text file 
+It consist of instructions of what you want on your container
+The name of the file will always be dockerfile or Dockerfile 
+There is no extension to this file 
+To write this file no special coding skills are required
+This file is written using 12 docker keywords and we arguments to these keywords 
+
+Syntax: 
+
+keyword argument/command 
+
+====================================
+
+
+          
+Keywords to write dockerfile:
+=================================== 
+
+1. FROM
+A dockerfile will always start with FROM keyword 
+FROM which base image you want to customize your own image
+What is the base image over which you will do your customization
+FROM keyword also indicates what will be the base of your container 
+This is mandatory keyword 
+
+2. RUN
+run linux commands to install/upgrade/uninstall packages on the container 
+run linux commands to create directories, create files, users, groups and permissions
+This keyword can be repeated multiple times in the dockerfile 
+the container when created form this dockerfile image-- all these linux commands will be pre-executed on it 
+This is not a mandatory keyword 
+
+3. ENV
+to create variables and give values them, we use this keyword 
+The scope of these variables is only in dockerfile 
+the variables can be called in dockerfile with synatx as ${VAR_NAME}
+This is not a mandatory keyword 
+
+4. LABEL 
+example:
+ LABEL key= "value"
+LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
+This is not a mandatory keyword 
+The LABEL instruction adds metadata to an image. 
+A LABEL is a key-value pair. 
+To include spaces within a LABEL value, use quotes and backslashes as you would in command-line parsing. 
+A few usage examples:
+LABEL "com.example.vendor"="ACME Incorporated"
+LABEL com.example.label-with-value="foo"
+LABEL version="1.0"
+LABEL description="This text illustrates \
+that label-values can span multiple lines."
+An image can have more than one label. You can specify multiple labels on a single line.
+
+
+5. COPY 
+It is used to copy a file from docker host to the containers directory 
+But it cannot copy .tar files on container directory 
+
+6. ADD 
+It is used to copy a file from docker host to the containers directory
+But it can copy .tar files, by extracting the files and copy it on container directory
+If there is a file on a URL -> copy keyword can connect to the url and download the file on container
+
+
+7. EXPOSE 
+using this keyword, we provide port number
+this will be target port of container, where the application is exposed.
+
+8. CMD 
+using this keyword we will provide the  command that will run once the container is launched
+this command will be responsible to start/stop an application/sever on container or execute any file
+The default command on the container can be replaced by a new command passed at runtime 
+
+9. ENTRYPOINT
+using this keyword we will provide the  command that will run once the container is launched
+The default command on the container CANNOT be replaced by a new command passed at runtime rather the new command passed at runtime goes as an argument to the entrypoint command.
+
+
+
+Build an image from dockerfile 
+
+# docker build -t myimagenginx .
+
+
+Create a dockerfile to deploy HTMl code on nginx server 
+
+# mkdir mydockerfiles 
+
+# cd mydockerfiles 
+
+# vim dockerfile 
+
+
+
+# this is our nginx deployment dockerfile
+
+FROM ubuntu
+RUN apt-get update
+RUN apt-get install nginx -y
+LABEL description="This is nginx deployment"
+COPY index.html /var/www/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
+Save the file 
+
+# vim index.html 
+
+<h1> This file is from docker </h1> 
+
+
+Build the dockerfile to image 
+
+# docker build -t myimagenginx . 
+
+# docker images 
+
+# docker run -d -P myimagenginx
+
+# docker ps -a 
+
+
+==========================
+CICD - JENKINS DOCKER PIPELINE:
+
+FOR Your information:
+
+The easiest way to run this application is simply to move the war file to your CATALINA_HOME/webapps directory. Tomcat will automatically expand and deploy the application for you. You can view it with the following URL (assuming that you're running tomcat on port 8080 as is the default):
+<publicIP>:<oirtnumber>/addressbook
+
+Run this command on terminal: With this command we are letting jenkins user to run docker commands 
+
+# chmod -R 777 /var/run/docker.sock
+
+ALSO WATCH THE RECORDING FOR HWO TO ADD CREDNETIALS FOR DOCKERHUB
+==========================================================
+
+pipeline{
+    agent any
+    tools{
+        maven 'mymaven'
+    }
+    stages{
+        stage('clone the repo'){
+            steps{
+                git 'https://github.com/Sonal0409/DevOpsCodeDemo.git'
+            }
+        }
+        stage('Build Code'){
+            steps{
+                sh 'mvn clean package'
+            }
+        }
+        stage('Build Image'){
+            steps{
+                sh 'docker build -t myjavajenkins .'
+            }
+        }
+      
+        stage('Deploy the Image'){
+            steps{
+                sh 'docker run -d -P sonal04/myjavajenkins'
+            }
+        }
+    }
+}
